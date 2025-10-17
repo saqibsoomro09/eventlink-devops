@@ -1,0 +1,18 @@
+version: 0.0
+os: linux
+files:
+  - source: app/
+    destination: /opt/eventlink/app
+hooks:
+  BeforeInstall:
+    - location: codedeploy/scripts/before_install.sh
+      timeout: 300
+  AfterInstall:
+    - location: codedeploy/scripts/after_install.sh
+      timeout: 300
+  ApplicationStart:
+    - location: codedeploy/scripts/application_start.sh
+      timeout: 300
+  ValidateService:
+    - location: codedeploy/scripts/validate_service.sh
+      timeout: 300
