@@ -3,8 +3,8 @@ set -euo pipefail
 
 cd /opt/eventlink
 
-# System-wide install is fine for this small app (keeps scripts simple)
+# Install Python deps (build in system site — simple service)
 python3 -m pip install -r requirements.txt
 
-# Make sure ec2-user can read/write app dir (logs, etc.)
+# Ensure runtime ownership
 chown -R ec2-user:ec2-user /opt/eventlink
