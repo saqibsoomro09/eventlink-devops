@@ -1,17 +1,21 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Systemd unit for gunicorn
-sudo tee /etc/systemd/system/eventlink.service >/dev/null <<'UNIT'
+# Create a hardened systemd unit binding to :80 (non-root allowed via CAP_NET_BIND_SERVICE)
+cat >/etc/systemd/system/eventlink.service <<'UNIT'
 [Unit]
-Description=EventLink Flask app
+Description=EventLink Flask via Gunicorn
 After=network.target
 
 [Service]
-# Simpler for the lab to bind to :80; in production you'd avoid running as root
-User=root
-WorkingDirectory=/opt/eventlink/app
-ExecStart=/usr/bin/gunicorn -w 2 -b 0.0.0.0:80 wsgi:application
+Type=simple
+User=ec2-user
+WorkingDirectory=/opt/eventlink
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+CapabilityBoundingSet=CAP_NET_BIND_SERVICE
+Environment=PYTHONUNBUFFERED=1
+# NOTE: gunicorn is typically at /usr/local/bin when installed via pip
+ExecStart=/usr/local/bin/gunicorn --workers 2 --bind 0.0.0.0:80 wsgi:app
 Restart=always
 RestartSec=2
 
@@ -19,8 +23,6 @@ RestartSec=2
 WantedBy=multi-user.target
 UNIT
 
-sudo systemctl daemon-reload
-sudo systemctl enable eventlink
-sudo systemctl start eventlink
-sleep 2
-sudo systemctl status eventlink --no-pager || true
+systemctl daemon-reload
+systemctl enable eventlink
+systemctl restart eventlink

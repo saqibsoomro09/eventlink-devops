@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
-cd /opt/eventlink/app
-# Ensure Python + pip
-if ! command -v pip3 >/dev/null 2>&1; then
-  sudo yum -y install python3-pip || sudo dnf -y install python3-pip
-fi
-sudo pip3 install -r requirements.txt
+
+cd /opt/eventlink
+
+# System-wide install is fine for this small app (keeps scripts simple)
+python3 -m pip install -r requirements.txt
+
+# Make sure ec2-user can read/write app dir (logs, etc.)
+chown -R ec2-user:ec2-user /opt/eventlink

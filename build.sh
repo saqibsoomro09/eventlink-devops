@@ -1,16 +1,22 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [[ -z "${BUCKET:-}" ]]; then
-  echo "Set BUCKET env var to your S3 bucket (e.g., eventlink-artifacts)"; exit 1
-fi
+: "${BUCKET:?Set BUCKET to your S3 bucket name (e.g., eventlink-artifacts)}"
 
-TS=$(date +"%Y-%m-%d_%H-%M-%S")
-ART="releases/${TS}_build-01.zip"
-mkdir -p releases
+TS="$(date +'%Y-%m-%d_%H-%M-%S')"
+BUILD_NUM="${BUILD_NUM:-01}"
+OUTDIR="releases"
+ZIP="${OUTDIR}/${TS}_build-${BUILD_NUM}.zip"
 
-zip -r "$ART" app/ codedeploy/ -x "__pycache__/*" "*.pyc"
-aws s3 cp "$ART" "s3://${BUCKET}/${ART}" --only-show-errors
+mkdir -p "${OUTDIR}"
 
-echo "Artifact uploaded: s3://${BUCKET}/${ART}"
-echo "Use this exact key in CodeDeploy for Test, then promote the SAME key to Prod."
+# Clean bytecode
+find app -name '__pycache__' -type d -prune -exec rm -rf {} + || true
+
+# Create the bundle (app + codedeploy/* only)
+zip -rq "${ZIP}" app/ codedeploy/
+
+# Upload to S3 (requires AWS CLI configured on Build EC2)
+aws s3 cp "${ZIP}" "s3://${BUCKET}/releases/$(basename "${ZIP}")"
+
+echo "Artifact uploaded: s3://${BUCKET}/releases/$(basename "${ZIP}")"
