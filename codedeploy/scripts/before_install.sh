@@ -1,25 +1,22 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Stop old service if present (ignore errors)
-systemctl stop eventlink || true
+# Stop service if it exists; don't fail if it's not installed yet
+systemctl stop eventlink.service || true
 
-# Ensure target dir exists and owned by runtime user
-mkdir -p /opt/eventlink
-chown -R ec2-user:ec2-user /opt/eventlink
+# Refresh metadata (fast if fresh)
+dnf -y makecache
 
-# Keep OS current; Amazon Linux 2023 uses dnf
-if command -v dnf >/dev/null 2>&1; then
-  dnf -y update
-  # Avoid curl conflicts on AL2023: allow resolver to replace/skip if needed
-  dnf -y install python3 python3-pip || true
-  dnf -y install --setopt=install_weak_deps=False --allowerasing --skip-broken curl || true
-else
-  yum -y update
-  # Same idea for older distros
-  yum -y install python3 python3-pip || true
-  yum -y install --skip-broken curl || true
+# If you truly need full curl, swap it in; otherwise skip this whole block.
+if rpm -q curl-minimal >/dev/null 2>&1; then
+  dnf -y swap curl-minimal curl || dnf -y install --allowerasing curl
 fi
 
-# Upgrade pip to avoid old resolver issues
-python3 -m pip install --upgrade pip
+# Core tools you probably need; remove curl here if you swapped above
+dnf -y install python3 python3-pip python3-virtualenv unzip
+
+# Ensure app dir exists (matches your appspec destination)
+mkdir -p /opt/eventlink
+
+# Make sure lifecycle scripts are executable (in case the bundle perms changed)
+chmod +x /opt/eventlink/codedeploy/scripts/*.sh || true

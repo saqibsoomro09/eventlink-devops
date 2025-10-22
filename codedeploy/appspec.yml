@@ -1,14 +1,16 @@
 version: 0.0
 os: linux
+
 files:
-  - source: app/
+  - source: /
     destination: /opt/eventlink
+
 hooks:
   BeforeInstall:
     - location: codedeploy/scripts/before_install.sh
       timeout: 300
       runas: root
-  AfterInstall:
+  Install:
     - location: codedeploy/scripts/after_install.sh
       timeout: 300
       runas: root
@@ -19,4 +21,4 @@ hooks:
   ValidateService:
     - location: codedeploy/scripts/validate_service.sh
       timeout: 120
-      runas: ec2-user
+      runas: root
