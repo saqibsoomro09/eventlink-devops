@@ -6,11 +6,6 @@ files:
     destination: /opt/eventlink
 
 hooks:
-  ApplicationStop:
-    - location: codedeploy/scripts/stop_service.sh
-      timeout: 60
-      runas: root
-
   BeforeInstall:
     - location: codedeploy/scripts/before_install.sh
       timeout: 300
