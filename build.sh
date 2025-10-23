@@ -13,8 +13,8 @@ mkdir -p "${OUTDIR}"
 # Clean bytecode
 find app -name '__pycache__' -type d -prune -exec rm -rf {} + || true
 
-# Create the bundle (app + codedeploy/* only)
-zip -rq "${ZIP}" app/ codedeploy/
+# Create the bundle: app/, codedeploy/ scripts, and *root-level* appspec.yml
+zip -rq "${ZIP}" app/ codedeploy/ appspec.yml
 
 # Upload to S3 (requires AWS CLI configured on Build EC2)
 aws s3 cp "${ZIP}" "s3://${BUCKET}/releases/$(basename "${ZIP}")"

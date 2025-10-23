@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Create / update systemd unit (non-root bind to :80 with caps)
+# Create / update systemd unit
 cat >/etc/systemd/system/eventlink.service <<'UNIT'
 [Unit]
 Description=EventLink Flask via Gunicorn
@@ -15,7 +15,10 @@ WorkingDirectory=/opt/eventlink
 CapabilityBoundingSet=CAP_NET_BIND_SERVICE
 AmbientCapabilities=CAP_NET_BIND_SERVICE
 NoNewPrivileges=true
-ExecStart=/usr/bin/gunicorn --workers 2 --bind 0.0.0.0:80 wsgi:app
+ExecStart=/usr/bin/python3 -m gunicorn --workers 2 --bind 0.0.0.0:80 \
+  --access-logfile /var/log/eventlink/gunicorn.log \
+  --error-logfile  /var/log/eventlink/gunicorn.log \
+  wsgi:app
 Restart=always
 RestartSec=2
 TimeoutStartSec=30
