@@ -2,9 +2,10 @@ from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-@app.get("/")
-def index():
-    return "EventLink is alive", 200
+@app.get("/version")
+def version():
+    return jsonify(version="1.1.0", message="EventLink is alive"), 200
+
 
 @app.get("/health")
 def health():
