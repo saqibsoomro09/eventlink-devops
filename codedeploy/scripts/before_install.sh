@@ -1,19 +1,18 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/bin/bash
+set -e
+echo "===== BEFORE INSTALL STARTED ====="
 
-# Stop service if it exists; don't fail if not installed yet
-systemctl stop eventlink.service || true
+# Clean cache
+sudo dnf clean all -y
 
-# Refresh metadata & update
-(yum -y makecache || dnf -y makecache) || true
-(yum -y update || dnf -y update) || true
+# Update safely without touching curl
+sudo dnf update -y --exclude=curl* --exclude=curl-minimal*
 
-# Ensure core tools
-(yum -y install python3 python3-pip python3-virtualenv unzip curl || \
- dnf -y install  python3 python3-pip python3-virtualenv unzip curl)
+# Install only what's needed for Python
+sudo dnf install -y python3 python3-pip
 
-# Ensure app dir exists (matches appspec destination)
-mkdir -p /opt/eventlink
+# Ensure app directory exists
+sudo mkdir -p /home/ec2-user/eventlink
+sudo chown -R ec2-user:ec2-user /home/ec2-user/eventlink
 
-# Make scripts executable if needed after copy
-chmod +x /opt/eventlink/codedeploy/scripts/*.sh || true
+echo "===== BEFORE INSTALL COMPLETED SUCCESSFULLY ====="
