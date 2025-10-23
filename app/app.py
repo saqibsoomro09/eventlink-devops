@@ -24,6 +24,15 @@ def add():
     except (TypeError, ValueError):
         return jsonify(error="Inputs must be numbers"), 400
     return jsonify(result=a + b), 200
-
+@app.route("/subtract")
+def subtract():
+    try:
+        a = float(request.args.get("a", 0))
+        b = float(request.args.get("b", 0))
+        return jsonify({"result": a - b})
+    except Exception as e:
+        app.logger.error("subtract failed: %s", e)
+        return jsonify({"error": "bad inputs"}), 400
+    
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080, debug=False)
