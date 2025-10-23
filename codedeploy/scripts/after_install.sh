@@ -1,19 +1,21 @@
 #!/usr/bin/env bash
 set -euo pipefail
+echo "=== AFTER INSTALL: Python deps ==="
 
 cd /opt/eventlink
 
-echo "=== AFTER INSTALL: Python deps ==="
-python3 -m pip install --upgrade pip
-python3 -m pip install -r app/requirements.txt
-
-# Ensure package import works: we import app.wsgi (package 'app')
-touch /opt/eventlink/app/__init__.py
-
-# Gunicorn is usually in /usr/local/bin on Amazon Linux; systemd unit may use it
-if [ -x /usr/local/bin/gunicorn ] && [ ! -x /usr/bin/gunicorn ]; then
-  sudo ln -sf /usr/local/bin/gunicorn /usr/bin/gunicorn
+# DO NOT upgrade pip here (that caused the failure).
+# Install only your dependencies. On AL2023, --break-system-packages is needed.
+# If your pip is older and doesn't know the flag, the second command will still work.
+if python3 -m pip --version | grep -q "pip 2[3-9]"; then
+  python3 -m pip install -r app/requirements.txt --no-cache-dir --break-system-packages
+else
+  python3 -m pip install -r app/requirements.txt --no-cache-dir
 fi
 
-# Ensure runtime ownership for logs and code
-sudo chown -R ec2-user:ec2-user /opt/eventlink /var/log/eventlink
+# Ensure runtime ownership + logs (optional, harmless if they already exist)
+chown -R ec2-user:ec2-user /opt/eventlink
+mkdir -p /var/log/eventlink
+chown ec2-user:ec2-user /var/log/eventlink
+
+echo "=== AFTER INSTALL: done ==="
