@@ -3,13 +3,17 @@ set -euo pipefail
 
 cd /opt/eventlink
 
-# Install Python deps (system site for simplicity)
+echo "=== AFTER INSTALL: Python deps ==="
 python3 -m pip install --upgrade pip
 python3 -m pip install -r app/requirements.txt
 
-# Ensure runtime ownership
-chown -R ec2-user:ec2-user /opt/eventlink
+# Ensure package import works: we import app.wsgi (package 'app')
+touch /opt/eventlink/app/__init__.py
 
-# Create log directory used by systemd/gunicorn and (optionally) CloudWatch
-mkdir -p /var/log/eventlink
-chown ec2-user:ec2-user /var/log/eventlink
+# Gunicorn is usually in /usr/local/bin on Amazon Linux; systemd unit may use it
+if [ -x /usr/local/bin/gunicorn ] && [ ! -x /usr/bin/gunicorn ]; then
+  sudo ln -sf /usr/local/bin/gunicorn /usr/bin/gunicorn
+fi
+
+# Ensure runtime ownership for logs and code
+sudo chown -R ec2-user:ec2-user /opt/eventlink /var/log/eventlink

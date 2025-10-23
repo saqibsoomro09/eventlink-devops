@@ -1,2 +1,2 @@
 # app/wsgi.py
-from .app import app  # exposes "app" for gunicorn
+from .app import app  # expose "app" for gunicorn
