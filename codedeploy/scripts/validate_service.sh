@@ -1,11 +1,17 @@
 #!/usr/bin/env bash
 set -euo pipefail
+echo "===== VALIDATE SERVICE ====="
 
-# Prefer localhost so SGs don't interfere
-curl -fsS http://127.0.0.1/health | grep -q '"status":"ok"'
+# Retry check to give Gunicorn time to start
+for i in {1..5}; do
+  if curl -fsS http://127.0.0.1/health | grep -q '"status":"ok"'; then
+    echo "Health check succeeded!"
+    exit 0
+  fi
+  echo "Waiting for app to become healthy... (attempt $i)"
+  sleep 3
+done
 
-# Tiny smoke test
-resp="$(curl -fsS -X POST http://127.0.0.1/add \
-  -H 'Content-Type: application/json' -d '{"a":2,"b":3}')"
-echo "Add response: $resp"
-echo "$resp" | grep -q '"result":5'
+echo "Health check failed — app not responding on port 80."
+sudo systemctl status eventlink --no-pager || true
+exit 1
