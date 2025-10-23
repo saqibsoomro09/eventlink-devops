@@ -1,1 +1,1 @@
-from app import app  # exposes "app" for gunicorn
+from app.app import app  # exposes "app" for gunicorn
